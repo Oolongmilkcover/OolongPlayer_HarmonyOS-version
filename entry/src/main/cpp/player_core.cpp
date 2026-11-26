@@ -78,7 +78,6 @@ void PlayerCore::Init(napi_env env, napi_value eventCallback)
     // 必须在 open 之前确定 PCM 格式
     op_set_audio_format(player_, kSampleRate, kChannels);
     AudioSink::Get().SetPlayer(player_);
-    AudioSink::Get().SetVolume(0.5f);
 
     if (eventCallback != nullptr) {
         napi_value name = nullptr;
@@ -190,11 +189,6 @@ int32_t PlayerCore::SetSpeed(int32_t speedX10)
 {
     if (player_ == nullptr) return OP_ERR_NOT_READY;
     return op_set_speed(player_, speedX10);
-}
-
-void PlayerCore::SetVolume(float volume)
-{
-    AudioSink::Get().SetVolume(volume);
 }
 
 void PlayerCore::SetFilter(int32_t type)

@@ -213,18 +213,6 @@ void AudioSink::SetPlayer(op_player* player)
     player_.store(player);
 }
 
-void AudioSink::SetVolume(float volume)
-{
-    if (volume < 0.0f) volume = 0.0f;
-    if (volume > 1.0f) volume = 1.0f;
-    volume_.store(volume);
-}
-
-float AudioSink::GetVolume() const
-{
-    return volume_.load();
-}
-
 OH_AudioData_Callback_Result AudioSink::OnWriteData(OH_AudioRenderer* renderer, void* userData,
                                                     void* audioData, int32_t audioDataSize)
 {
@@ -282,8 +270,6 @@ OH_AudioData_Callback_Result AudioSink::OnWriteData(OH_AudioRenderer* renderer, 
     if (validBytes < audioDataSize) {
         std::memset(static_cast<uint8_t*>(audioData) + validBytes, 0, (size_t)(audioDataSize - validBytes));
     }
-
-    self->ApplyVolume(audioData, validBytes);
 
     int32_t devicePendingMs = -1;
     if (player != nullptr) {
@@ -352,23 +338,6 @@ OH_AudioData_Callback_Result AudioSink::OnWriteData(OH_AudioRenderer* renderer, 
     }
 
     return AUDIO_DATA_CALLBACK_RESULT_VALID;
-}
-
-void AudioSink::ApplyVolume(void* audioData, int32_t validBytes)
-{
-    const float gain = volume_.load();
-    if (gain >= 0.999f || validBytes < (int32_t)sizeof(int16_t)) {
-        return;
-    }
-
-    auto* samples = static_cast<int16_t*>(audioData);
-    const int32_t count = validBytes / (int32_t)sizeof(int16_t);
-    for (int32_t i = 0; i < count; ++i) {
-        int32_t scaled = (int32_t)(samples[i] * gain);
-        if (scaled > 32767) scaled = 32767;
-        if (scaled < -32768) scaled = -32768;
-        samples[i] = (int16_t)scaled;
-    }
 }
 
 int32_t AudioSink::ReportDevicePendingMs(OH_AudioRenderer* renderer)

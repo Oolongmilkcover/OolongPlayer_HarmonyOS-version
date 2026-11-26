@@ -124,10 +124,6 @@ export class PlayerController {
     this.onDisplay(0);
   }
 
-  public setVolume(volume: number): void {
-    libentry.setVolume(volume);
-  }
-
   public setFilter(type: number): void {
     libentry.setFilter(type);
   }

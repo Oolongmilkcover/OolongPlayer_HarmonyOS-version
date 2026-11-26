@@ -33,8 +33,6 @@ public:
     void EndSeek();
 
     void SetPlayer(op_player* player);
-    void SetVolume(float volume);
-    float GetVolume() const;
 
     bool IsOpen() const { return renderer_ != nullptr; }
     int32_t SampleRate() const { return sampleRate_; }
@@ -48,11 +46,9 @@ private:
     static OH_AudioData_Callback_Result OnWriteData(OH_AudioRenderer* renderer, void* userData,
                                                     void* audioData, int32_t audioDataSize);
     int32_t ReportDevicePendingMs(OH_AudioRenderer* renderer);
-    void ApplyVolume(void* audioData, int32_t validBytes);
 
     OH_AudioRenderer* renderer_ = nullptr;
     std::atomic<op_player*> player_{nullptr};
-    std::atomic<float> volume_{0.5f};
 
     int32_t sampleRate_ = 48000;
     int32_t channels_ = 2;

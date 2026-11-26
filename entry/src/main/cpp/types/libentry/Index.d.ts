@@ -38,7 +38,6 @@ export const pause: () => number;
 export const stop: () => number;
 export const seek: (positionMs: number) => number;
 export const setSpeed: (speedX10: number) => number;
-export const setVolume: (volume: number) => void;
 export const setFilter: (type: number) => void;
 
 export const getDuration: () => number;

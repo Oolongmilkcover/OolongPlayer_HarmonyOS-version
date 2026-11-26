@@ -17,8 +17,6 @@ const NativeMock: Record<string, Object> = {
   'stop': () => 0,
   'seek': (positionMs: number) => 0,
   'setSpeed': (speedX10: number) => 0,
-  'setVolume': (volume: number) => {
-  },
   'setFilter': (type: number) => {
   },
   'getDuration': () => 0,

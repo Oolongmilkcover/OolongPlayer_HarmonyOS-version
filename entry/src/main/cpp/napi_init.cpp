@@ -223,20 +223,6 @@ napi_value JsSetSpeed(napi_env env, napi_callback_info info)
     return Int32Result(env, PlayerCore::Get().SetSpeed(speedX10));
 }
 
-napi_value JsSetVolume(napi_env env, napi_callback_info info)
-{
-    size_t argc = 1;
-    napi_value args[1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-
-    double volume = 0.5;
-    if (argc >= 1 && args[0] != nullptr) {
-        napi_get_value_double(env, args[0], &volume);
-    }
-    PlayerCore::Get().SetVolume((float)volume);
-    return nullptr;
-}
-
 napi_value JsSetFilter(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
@@ -303,7 +289,6 @@ static napi_value Init(napi_env env, napi_value exports)
         {"stop", nullptr, JsStop, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"seek", nullptr, JsSeek, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"setSpeed", nullptr, JsSetSpeed, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"setVolume", nullptr, JsSetVolume, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"setFilter", nullptr, JsSetFilter, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"getDuration", nullptr, JsGetDuration, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"getPosition", nullptr, JsGetPosition, nullptr, nullptr, nullptr, napi_default, nullptr},

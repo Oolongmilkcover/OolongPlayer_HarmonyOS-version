@@ -28,7 +28,6 @@ public:
     int32_t Stop();
     int32_t Seek(int64_t positionMs);
     int32_t SetSpeed(int32_t speedX10);
-    void SetVolume(float volume);
     void SetFilter(int32_t type);
 
     bool HasPlayer() const { return player_ != nullptr; }

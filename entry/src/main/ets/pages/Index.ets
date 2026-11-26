@@ -66,7 +66,6 @@ struct Index {
   @State private durationMs: number = 0;
   @State private displayMs: number = 0;
   @State private speed: number = 1.0;
-  @State private volume: number = 0.5;
   @State private mediaName: string = '';
   @State private playlist: PlayItem[] = [];
   @State private currentIndex: number = -1;
@@ -86,7 +85,6 @@ struct Index {
   // 上一个片源的 fd 不能在新 open 刚受理时就关：op_open/op_stop 都是异步投递，
   // demux 线程可能还在读它。等新片源 OPENED、或收到 STOPPED 后再关。
   private pendingCloseFile: fs.File | null = null;
-  private lastVolume: number = 0.5;
   private openMenu: MenuElement[] = [];
   private filterMenu: MenuElement[] = [];
   private hideTimer: number = -1;
@@ -382,32 +380,6 @@ struct Index {
           .width(56)
           .textAlign(TextAlign.End)
 
-        Button({ type: ButtonType.Circle }) {
-          Image(this.volume > 0.001 ? $r('app.media.volume_btn') : $r('app.media.volume_none_btn'))
-            .width(18)
-            .height(18)
-            .objectFit(ImageFit.Contain)
-        }
-        .width(30)
-        .height(30)
-        .backgroundColor(Color.Transparent)
-        .onClick(() => {
-          this.toggleMute();
-        })
-
-        Slider({
-          value: this.volume,
-          min: 0,
-          max: 1,
-          step: 0.01
-        })
-          .width(62)
-          .blockColor('#FFFFFF')
-          .trackColor('#3A3A3A')
-          .selectedColor(COLOR_ACCENT)
-          .onChange((value: number) => {
-            this.setVolume(value);
-          })
       }
       .width('100%')
       .height(30)
@@ -921,24 +893,6 @@ struct Index {
     if (!this.initialized || this.isStream) return;
     this.pokeControls();
     this.speed = this.controller.changeSpeed(delta);
-  }
-
-  private setVolume(value: number): void {
-    let volume = value;
-    if (volume < 0) volume = 0;
-    if (volume > 1) volume = 1;
-    this.volume = volume;
-    this.controller.setVolume(volume);
-    this.pokeControls();
-  }
-
-  private toggleMute(): void {
-    if (this.volume > 0.001) {
-      this.lastVolume = this.volume;
-      this.setVolume(0);
-    } else {
-      this.setVolume(this.lastVolume > 0.001 ? this.lastVolume : 0.5);
-    }
   }
 
   private applyFilter(type: number): void {
