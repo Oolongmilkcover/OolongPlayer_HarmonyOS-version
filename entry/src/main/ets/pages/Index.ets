@@ -430,20 +430,6 @@ struct Index {
             }
           })
           PlayerIconButton({
-            icon: $r('app.media.rewind_btn'),
-            active: this.canSeekUi(),
-            action: (): void => {
-              this.controller.rewind();
-            }
-          })
-          PlayerIconButton({
-            icon: $r('app.media.ff_btn'),
-            active: this.canSeekUi(),
-            action: (): void => {
-              this.controller.fastForward();
-            }
-          })
-          PlayerIconButton({
             icon: $r('app.media.slowdown_btn'),
             active: this.canSetSpeed(),
             action: (): void => {
