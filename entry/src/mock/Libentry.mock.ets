@@ -7,6 +7,8 @@ const NativeMock: Record<string, Object> = {
   'attachSurface': (surfaceId: string, width: number, height: number) => true,
   'resizeSurface': (width: number, height: number) => {
   },
+  'refreshSurface': (width: number, height: number) => {
+  },
   'detachSurface': () => {
   },
   'open': (path: string, fd: number, offset: number, size: number) => 0,

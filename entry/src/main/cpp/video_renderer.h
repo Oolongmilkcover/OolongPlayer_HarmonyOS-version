@@ -49,6 +49,8 @@ private:
     // recreate=true 时强制销毁并重建 window surface（context/纹理保留）
     bool BindSurfaceLocked(bool recreate);
     void UnbindLocked();
+    // 释放当前持有的 NativeWindow 代理（先销毁绑定在它上面的 EGLSurface）
+    void ReleaseWindowLocked();
     void ReleaseEglLocked();
     void ApplyBufferGeometryLocked();
     void UpdateSurfaceSizeLocked(int32_t* outWidth, int32_t* outHeight);

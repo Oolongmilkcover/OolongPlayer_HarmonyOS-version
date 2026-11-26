@@ -55,6 +55,9 @@ struct Index {
   private controller: PlayerController = new PlayerController();
   private videoController: XComponentController = new XComponentController();
   private currentFile: fs.File | null = null;
+  // 上一个片源的 fd 不能在新 open 刚受理时就关：op_open/op_stop 都是异步投递，
+  // demux 线程可能还在读它。等新片源 OPENED、或收到 STOPPED 后再关。
+  private pendingCloseFile: fs.File | null = null;
   private lastVolume: number = 0.5;
   private openMenu: MenuElement[] = [];
   private filterMenu: MenuElement[] = [];
@@ -93,6 +96,7 @@ struct Index {
     ];
 
     this.controller.onOpened = (info: MediaInfo): void => {
+      this.closePendingFile();
       this.opening = false;
       this.initialized = true;
       this.playing = true;
@@ -110,6 +114,7 @@ struct Index {
       this.playNext();
     };
     this.controller.onError = (message: string): void => {
+      this.closePendingFile();
       this.opening = false;
       this.playing = false;
       this.videoVisible = false;
@@ -121,6 +126,10 @@ struct Index {
         this.playing = true;
       } else if (state === STATE_PAUSED || state === STATE_STOPPED || state === STATE_ENDED) {
         this.playing = false;
+        // stop 是异步的，收到停止事件后才真正可以关闭上一个片源的 fd
+        if (state === STATE_STOPPED) {
+          this.closePendingFile();
+        }
       }
     };
 
@@ -140,8 +149,11 @@ struct Index {
       this.applyOrientation(false);
     }
     this.controller.detachSurface();
-    this.closeCurrentFile();
+    // 先停内核（op_destroy 会 join 内部线程），再关 fd；反过来会让 demux 线程
+    // 在收尾阶段读到已经关闭的 fd。
     this.controller.release();
+    this.closeCurrentFile();
+    this.closePendingFile();
   }
 
   build() {
@@ -855,7 +867,8 @@ struct Index {
     this.currentIndex = -1;
     this.cancelHide();
     this.controlsVisible = true;
-    this.closeCurrentFile();
+    // op_stop 也是异步的，等 STOPPED 事件回来再关 fd
+    this.deferCloseCurrentFile();
   }
 
   private changeSpeed(delta: number): void {
@@ -1029,8 +1042,8 @@ struct Index {
       return;
     }
 
-    // 新文件已经接手，旧的 fd 可以关了
-    this.closeCurrentFile();
+    // op_open 只是受理，还没真正切换；旧 fd 等新片源 OPENED 后再关
+    this.deferCloseCurrentFile();
     this.currentFile = file;
     this.currentIndex = index;
     this.mediaName = item.name;
@@ -1055,7 +1068,7 @@ struct Index {
       return;
     }
 
-    this.closeCurrentFile();
+    this.deferCloseCurrentFile();
     this.currentIndex = -1;
     this.mediaName = url;
     this.displayMs = 0;
@@ -1100,6 +1113,24 @@ struct Index {
       console.error('close fd failed: ' + error.message);
     }
     this.currentFile = null;
+  }
+
+  /** 把当前 fd 挪到待关闭队列：内核真正停/切完成（OPENED/STOPPED）后再关 */
+  private deferCloseCurrentFile(): void {
+    this.closePendingFile();
+    this.pendingCloseFile = this.currentFile;
+    this.currentFile = null;
+  }
+
+  private closePendingFile(): void {
+    if (this.pendingCloseFile === null) return;
+    try {
+      fs.closeSync(this.pendingCloseFile);
+    } catch (err) {
+      const error = err as BusinessError;
+      console.error('close pending fd failed: ' + error.message);
+    }
+    this.pendingCloseFile = null;
   }
 
   /* ------------------------------------------------------------ 工具 */

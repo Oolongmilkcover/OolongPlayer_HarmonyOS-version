@@ -125,7 +125,11 @@ VideoRenderer& VideoRenderer::Get()
 void VideoRenderer::SetSurface(void* window, int32_t width, int32_t height)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    // window 变了由 BindSurfaceLocked 里的 eglWindow_ 比较发现，这里只更新尺寸
+    // 换窗口（含全屏时反复 attach）先释放旧的 NativeWindow 代理，否则每次
+    // OH_NativeWindow_CreateNativeWindowFromSurfaceId 都会留下一个引用。
+    if (window_ != nullptr && window_ != window) {
+        ReleaseWindowLocked();
+    }
     window_ = window;
     surfaceWidth_ = width;
     surfaceHeight_ = height;
@@ -157,9 +161,24 @@ void VideoRenderer::ApplyBufferGeometryLocked()
 void VideoRenderer::ClearSurface()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    window_ = nullptr;
+    ReleaseWindowLocked();
     surfaceWidth_ = 0;
     surfaceHeight_ = 0;
+}
+
+void VideoRenderer::ReleaseWindowLocked()
+{
+    // 先解绑并销毁建在这个 window 上的 EGLSurface，再释放 window 代理本身
+    if (surface_ != EGL_NO_SURFACE && display_ != EGL_NO_DISPLAY) {
+        UnbindLocked();
+        eglDestroySurface(display_, surface_);
+        surface_ = EGL_NO_SURFACE;
+    }
+    eglWindow_ = nullptr;
+    if (window_ != nullptr) {
+        OH_NativeWindow_DestroyNativeWindow(static_cast<OHNativeWindow*>(window_));
+        window_ = nullptr;
+    }
 }
 
 void VideoRenderer::Render(const op_frame* frame)
