@@ -13,3 +13,5 @@
 /.appanalyzer
 # 本地排查用的 hilog 抓取、参考实现和临时产物，不入库
 /temp
+# 本地打包产物（HAP 体积大，不入库）
+/dist
