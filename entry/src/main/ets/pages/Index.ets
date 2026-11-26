@@ -385,7 +385,8 @@ struct Index {
       .height(30)
       .padding({ left: 8, right: 8 })
 
-      Scroll() {
+      Row() {
+        // 左侧六键：播放 / 停止 / 上一集 / 下一集 / 减速 / 倍速 / 加速
         Row() {
           // 播放/暂停：点击时本地立即翻转图标（乐观更新），SDK 状态事件再校正
           Button({ type: ButtonType.Circle }) {
@@ -448,6 +449,12 @@ struct Index {
               this.changeSpeed(0.1);
             }
           })
+        }
+
+        Blank()
+
+        // 右侧三键：滤镜 / 播放列表 / 全屏
+        Row() {
           Button({ type: ButtonType.Circle }) {
             Image($r('app.media.setting_btn'))
               .width(18)
@@ -474,12 +481,10 @@ struct Index {
             }
           })
         }
-        .height(40)
-        .padding({ left: 4, right: 4 })
       }
-      .scrollable(ScrollDirection.Horizontal)
-      .scrollBar(BarState.Off)
       .width('100%')
+      .height(40)
+      .padding({ left: 8, right: 8 })
     }
     .width('100%')
     .backgroundColor(COLOR_BAR)
