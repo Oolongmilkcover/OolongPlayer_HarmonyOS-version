@@ -1,4 +1,4 @@
-import { common } from '@kit.AbilityKit';
+﻿import { common } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { fileIo as fs, picker } from '@kit.CoreFileKit';
@@ -24,6 +24,34 @@ class PlayItem {
   constructor(name: string, uri: string) {
     this.name = name;
     this.uri = uri;
+  }
+}
+
+// 控制栏小图标按钮。用 @Component + @Prop 而不是 @Builder 按值传参：
+// @Builder 的按值参数变化不会触发内部 UI 刷新，播放列表增删后上/下一集按钮
+// 会一直保持旧的 enabled 状态，点了没反应。
+@Component
+struct PlayerIconButton {
+  icon: Resource = $r('app.media.start_btn');
+  @Prop active: boolean = true;
+  action: () => void = (): void => {
+  };
+
+  build() {
+    Button({ type: ButtonType.Circle }) {
+      Image(this.icon)
+        .width(18)
+        .height(18)
+        .objectFit(ImageFit.Contain)
+    }
+    .width(28)
+    .height(28)
+    .backgroundColor(Color.Transparent)
+    .enabled(this.active)
+    .opacity(this.active ? 1.0 : 0.35)
+    .onClick((): void => {
+      this.action();
+    })
   }
 }
 
@@ -408,31 +436,59 @@ struct Index {
           .onClick((): void => {
             this.togglePlay();
           })
-          this.IconButton($r('app.media.stop_btn'), this.initialized, (): void => {
-            this.stopPlayback();
+          PlayerIconButton({
+            icon: $r('app.media.stop_btn'),
+            active: this.initialized,
+            action: (): void => {
+              this.stopPlayback();
+            }
           })
-          this.IconButton($r('app.media.prev_btn'), this.canSwitchTrack(), (): void => {
-            this.playPrev();
+          PlayerIconButton({
+            icon: $r('app.media.prev_btn'),
+            active: this.canSwitchTrack(),
+            action: (): void => {
+              this.playPrev();
+            }
           })
-          this.IconButton($r('app.media.next_btn'), this.canSwitchTrack(), (): void => {
-            this.playNext();
+          PlayerIconButton({
+            icon: $r('app.media.next_btn'),
+            active: this.canSwitchTrack(),
+            action: (): void => {
+              this.playNext();
+            }
           })
-          this.IconButton($r('app.media.rewind_btn'), this.canSeekUi(), (): void => {
-            this.controller.rewind();
+          PlayerIconButton({
+            icon: $r('app.media.rewind_btn'),
+            active: this.canSeekUi(),
+            action: (): void => {
+              this.controller.rewind();
+            }
           })
-          this.IconButton($r('app.media.ff_btn'), this.canSeekUi(), (): void => {
-            this.controller.fastForward();
+          PlayerIconButton({
+            icon: $r('app.media.ff_btn'),
+            active: this.canSeekUi(),
+            action: (): void => {
+              this.controller.fastForward();
+            }
           })
-          this.IconButton($r('app.media.slowdown_btn'), this.canSetSpeed(), (): void => {
-            this.changeSpeed(-0.1);
+          PlayerIconButton({
+            icon: $r('app.media.slowdown_btn'),
+            active: this.canSetSpeed(),
+            action: (): void => {
+              this.changeSpeed(-0.1);
+            }
           })
           Text('倍速:' + this.speed.toFixed(1))
             .fontSize(10)
             .fontColor('#CFCFCF')
             .width(42)
             .textAlign(TextAlign.Center)
-          this.IconButton($r('app.media.speedup_btn'), this.canSetSpeed(), (): void => {
-            this.changeSpeed(0.1);
+          PlayerIconButton({
+            icon: $r('app.media.speedup_btn'),
+            active: this.canSetSpeed(),
+            action: (): void => {
+              this.changeSpeed(0.1);
+            }
           })
           Button({ type: ButtonType.Circle }) {
             Image($r('app.media.setting_btn'))
@@ -445,11 +501,19 @@ struct Index {
           .backgroundColor(Color.Transparent)
           .bindMenu(this.filterMenu)
 
-          this.IconButton($r('app.media.showlist_btn'), true, (): void => {
-            this.playlistVisible = !this.playlistVisible;
+          PlayerIconButton({
+            icon: $r('app.media.showlist_btn'),
+            active: true,
+            action: (): void => {
+              this.playlistVisible = !this.playlistVisible;
+            }
           })
-          this.IconButton($r('app.media.full_btn'), true, (): void => {
-            this.toggleFullscreen();
+          PlayerIconButton({
+            icon: $r('app.media.full_btn'),
+            active: true,
+            action: (): void => {
+              this.toggleFullscreen();
+            }
           })
         }
         .height(40)
@@ -462,24 +526,6 @@ struct Index {
     .width('100%')
     .backgroundColor(COLOR_BAR)
     .padding({ top: 2, bottom: 8 })
-  }
-
-  @Builder
-  IconButton(icon: Resource, enabled: boolean, action: () => void) {
-    Button({ type: ButtonType.Circle }) {
-      Image(icon)
-        .width(18)
-        .height(18)
-        .objectFit(ImageFit.Contain)
-    }
-    .width(28)
-    .height(28)
-    .backgroundColor(Color.Transparent)
-    .enabled(enabled)
-    .opacity(enabled ? 1.0 : 0.35)
-    .onClick(() => {
-      action();
-    })
   }
 
   @Builder
