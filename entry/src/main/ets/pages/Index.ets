@@ -386,7 +386,7 @@ struct Index {
       .padding({ left: 8, right: 8 })
 
       Row() {
-        // 左侧六键：播放 / 停止 / 上一集 / 下一集 / 减速 / 倍速 / 加速
+        // 左侧六键：播放 / 停止 / 上一集 / 下一集 / 减速 / 加速，末尾显示倍速值
         Row() {
           // 播放/暂停：点击时本地立即翻转图标（乐观更新），SDK 状态事件再校正
           Button({ type: ButtonType.Circle }) {
@@ -437,11 +437,6 @@ struct Index {
               this.changeSpeed(-0.1);
             }
           })
-          Text('倍速:' + this.speed.toFixed(1))
-            .fontSize(10)
-            .fontColor('#CFCFCF')
-            .width(42)
-            .textAlign(TextAlign.Center)
           PlayerIconButton({
             icon: $r('app.media.speedup_btn'),
             active: this.canSetSpeed(),
@@ -449,6 +444,11 @@ struct Index {
               this.changeSpeed(0.1);
             }
           })
+          Text('倍速:' + this.speed.toFixed(1))
+            .fontSize(10)
+            .fontColor('#CFCFCF')
+            .width(42)
+            .textAlign(TextAlign.Center)
         }
 
         Blank()
